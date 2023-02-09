@@ -1,0 +1,19 @@
+const DATASET_DATE_FORMAT = 'dd.MM.yy';
+const CHART_UPDATE_TIMEOUT = 1_000;
+
+const MAX_TARGET_GLUCOSE = 9.5;
+const MIN_TARGET_GLUCOSE = 4.5;
+
+const BORDER_WIDTH = 4;
+
+const POINT_BACKGROUND_COLOR = '#2a75e9';
+const POINT_BORDER_COLOR = '#cedbf7';
+
+// const LABEL_TEXT_COLOR = '#e0e3ec';
+const LABEL_TEXT_COLOR = '#15141a';
+const LINE_COLOR = '#2a75e9';
+const GLUCOSE_RANGE_COLOR = 'rgba(170,170,175,0.2)';
+
+const GLUCOSE_RANGE_BORDER_COLOR = 'rgb(159,204,161)';
+const GLUCOSE_RANGE_BORDER_WIDTH = 0;
+const BACKGROUND_COLOR = 'rgb(29 30 34)';

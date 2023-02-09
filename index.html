@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fukk diabetes</title>
+
+  <link rel="icon" href="favicon.ico" type="image/ico">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@^2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@^1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.3.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.1.1/air-datepicker.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.1.1/air-datepicker.css">
+
+  <link rel="stylesheet" href="css/glycemix.css"/>
+
+  <script type="text/javascript" src="js/Utils.js"></script>
+  <script type="text/javascript" src="js/Settings.js"></script>
+  <script type="text/javascript" src="js/GlucoseEntry.js"></script>
+  <script type="text/javascript" src="js/GlucoseDataSet.js"></script>
+  <script type="text/javascript" src="js/GlucoseRepository.js"></script>
+  <script type="text/javascript" src="js/GlucoseChart.js"></script>
+</head>
+<body>
+
+<div id="date-container">
+  <button id="prevDate" onclick="shiftDays(-1)"><</button>
+  <input type="text" id="date" placeholder="Выберите дату"/>
+  <button id="nextDate" onclick="shiftDays(1)">></button>
+</div>
+<div id="chart-container">
+  <canvas id="myChart"><p>Canvas chart</p></canvas>
+</div>
+
+<script>
+  Chart.register(ChartDataLabels);
+  // Chart.defaults.font.size = 16;
+
+  const DateTime = luxon.DateTime;
+
+  let today = new Date();
+  let forDate = DateTime.fromJSDate(today);
+  let datepicker = new AirDatepicker('#date', {
+    isMobile: true,
+    autoClose: true,
+    buttons: ['today'],
+    selectedDates: [today],
+    maxDate: today,
+    // TODO minDate
+    onSelect({date, formattedDate, datepicker}) {
+      forDate = DateTime.fromJSDate(date);
+      updateChart(forDate);
+    }
+  });
+
+  let chart = new GlucoseChart(document.getElementById('myChart'));
+
+  let chartWidth = chart.width;
+  let chartHeight = chart.height;
+  if (chartWidth < MIN_CHART_WIDTH) {
+    chart.zoom({x: MIN_CHART_WIDTH / chartWidth * 1.5});
+    chart.pan({x: START_OF_DAY});
+  }
+
+  let glucoseRepository = new GlucoseRepository();
+
+  function updateChart(date) {
+    glucoseRepository.findOnDate(date).then(data => {
+      chart.updateDataSet(data);
+      chart.update();
+    });
+    document.getElementById("nextDate").disabled = isCurrentDate(date);
+  }
+
+  let lastId;
+  glucoseRepository.getLastId().then(id => {
+    lastId = id;
+    updateChart(forDate);
+    setInterval(checkUpdates, CHART_UPDATE_TIMEOUT);
+  });
+
+  function checkUpdates() {
+    if (!isCurrentDate(forDate)) return;
+
+    glucoseRepository.getLastId().then(id => {
+      if (lastId !== id) {
+        updateChart(forDate);
+        lastId = id;
+      }
+    });
+  }
+
+  function shiftDays(num) {
+    let nextDate = forDate.plus({days: num});
+    datepicker.selectDate(nextDate.toJSDate());
+  }
+
+  function isCurrentDate(date) {
+    return date.startOf('day').toSeconds() === DateTime.now().startOf('day').toSeconds();
+  }
+</script>
+</body>
+</html>
